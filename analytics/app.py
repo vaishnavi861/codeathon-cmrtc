@@ -249,77 +249,189 @@ if 'auth_mode' not in st.session_state:
 # ============================================
 # AUTH GATE — LOGIN / SIGNUP
 # ============================================
-from auth import signup, login
+from auth import signup as _signup, login as _login
+import streamlit.components.v1 as components
+import threading, hashlib, time, json, os
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import urllib.parse
+
+LOGIN_PORT = 8502
+_TOKEN_FILE = os.path.join(os.path.dirname(__file__), ".auth_tokens.json")
+
+def _save_token(token, user_data):
+    """Persist token to file so it survives Streamlit reruns."""
+    tokens = {}
+    try:
+        with open(_TOKEN_FILE, "r") as f:
+            tokens = json.load(f)
+    except: pass
+    tokens[token] = user_data
+    with open(_TOKEN_FILE, "w") as f:
+        json.dump(tokens, f)
+
+def _pop_token(token):
+    """Read and remove a token from file."""
+    try:
+        with open(_TOKEN_FILE, "r") as f:
+            tokens = json.load(f)
+        if token in tokens:
+            user_data = tokens.pop(token)
+            with open(_TOKEN_FILE, "w") as f:
+                json.dump(tokens, f)
+            return user_data
+    except: pass
+    return None
+
+class _LoginHandler(BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+
+    def _send_json(self, data, status=200):
+        body = json.dumps(data).encode()
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "POST")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
+    def do_GET(self):
+        html_path = os.path.join(os.path.dirname(__file__), "login.html")
+        with open(html_path, "rb") as f:
+            content = f.read()
+        bridge = b"""
+<script>
+(function(){
+  window.handleLogin = function() {
+    var email = document.getElementById('login-email').value;
+    var pw    = document.getElementById('login-password').value;
+    if (!email || !pw) { alert('Please fill in both fields.'); return; }
+    if (typeof exciteAll==='function') exciteAll();
+    if (typeof showSparkles==='function') showSparkles();
+    if (typeof spinAllCharacters==='function') spinAllCharacters();
+    setTimeout(function(){
+      fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email:email,password:pw})})
+      .then(r=>r.json()).then(function(d){
+        if(d.success) window.location.href='http://localhost:8501/?auth_token='+d.token;
+        else { alert('Login failed: '+d.message); }
+      }).catch(function(e){ alert('Error: '+e); });
+    },700);
+  };
+  window.handleSignup = function() {
+    var name = document.getElementById('signup-name').value;
+    var email= document.getElementById('signup-email').value;
+    var pw   = document.getElementById('signup-password').value;
+    if (!name||!email||!pw) { alert('Please fill in all fields.'); return; }
+    if (pw.length<6) { alert('Password must be at least 6 characters.'); return; }
+    if (typeof exciteAll==='function') exciteAll();
+    if (typeof showSparkles==='function') showSparkles();
+    if (typeof spinAllCharacters==='function') spinAllCharacters();
+    fetch('/api/signup',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:name,email:email,password:pw})})
+    .then(r=>r.json()).then(function(d){
+      if(d.success) alert('Account created! Now log in.');
+      else alert('Signup failed: '+d.message);
+    }).catch(function(e){ alert('Error: '+e); });
+  };
+})();
+</script>
+"""
+        content = content.replace(b"</body>", bridge + b"\n</body>")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(content)
+
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", 0))
+        body = json.loads(self.rfile.read(length).decode())
+
+        if self.path == "/api/login":
+            success, result = _login(body.get("email",""), body.get("password",""))
+            if success:
+                token = hashlib.sha256(
+                    f"{body['email']}{time.time()}".encode()).hexdigest()[:24]
+                _save_token(token, result)
+                self._send_json({"success": True, "token": token})
+            else:
+                self._send_json({"success": False, "message": str(result)})
+
+        elif self.path == "/api/signup":
+            success, message = _signup(
+                body.get("name",""), body.get("email",""), body.get("password",""))
+            self._send_json({"success": success, "message": message})
+
+def _start_login_server():
+    try:
+        server = HTTPServer(("localhost", LOGIN_PORT), _LoginHandler)
+        server.serve_forever()
+    except OSError:
+        pass
+
+# Start login server once (socket reuse will silently skip if already running)
+_server_thread = threading.Thread(target=_start_login_server, daemon=True)
+_server_thread.start()
 
 def show_auth_page():
-    """Render the Login or Sign Up page."""
+    """Gate: check for auth token or show link to anime login page."""
+    token = st.query_params.get("auth_token", None)
+    if token:
+        user_data = _pop_token(token)
+        st.query_params.clear()
+        if user_data:
+            st.session_state.authenticated = True
+            st.session_state.current_user = user_data
+            st.session_state.user_data["name"] = user_data["name"]
+            st.session_state.user_data["email"] = user_data["email"]
+            st.rerun()
 
-    # Center the form
-    col_spacer1, col_form, col_spacer2 = st.columns([1, 2, 1])
+    # Hide all Streamlit chrome
+    st.markdown("""
+    <style>
+        header[data-testid="stHeader"],footer,#MainMenu,
+        div[data-testid="stSidebar"],section[data-testid="stSidebar"],
+        [data-testid="collapsedControl"],div[data-testid="stSidebarNav"]
+        { display:none !important; }
+        .block-container { padding: 0 !important; max-width:100% !important; }
+        .main .block-container { padding-top:0 !important; }
+    </style>
+    """, unsafe_allow_html=True)
 
-    with col_form:
-        # Logo
-        st.markdown("""
-        <div style="text-align:center; margin-bottom: 8px;">
-            <span style="font-size: 48px;">🧠</span>
-        </div>
-        <h1 style="text-align:center; font-size: 2rem; margin-bottom: 0;">CareerCore</h1>
-        <p style="text-align:center; color: #94a3b8; font-size: 14px; margin-bottom: 32px;">AI-Powered Career Readiness Platform</p>
-        """, unsafe_allow_html=True)
-
-        # Tab toggle
-        tab_login, tab_signup = st.tabs(["🔑 Log In", "✨ Sign Up"])
-
-        with tab_login:
-            st.markdown("### Welcome Back")
-            login_email = st.text_input("Email Address", key="login_email", placeholder="you@example.com")
-            login_password = st.text_input("Password", type="password", key="login_password", placeholder="Enter your password")
-
-            if st.button("Log In", type="primary", use_container_width=True, key="btn_login"):
-                if not login_email or not login_password:
-                    st.error("Please fill in both fields.")
-                else:
-                    success, result = login(login_email, login_password)
-                    if success:
-                        st.session_state.authenticated = True
-                        st.session_state.current_user = result
-                        st.session_state.user_data['name'] = result['name']
-                        st.session_state.user_data['email'] = result['email']
-                        st.rerun()
-                    else:
-                        st.error(result)
-
-        with tab_signup:
-            st.markdown("### Create Your Account")
-            signup_name = st.text_input("Full Name", key="signup_name", placeholder="Your full name")
-            signup_email = st.text_input("Email Address", key="signup_email", placeholder="you@example.com")
-            signup_password = st.text_input("Password", type="password", key="signup_password", placeholder="Create a strong password")
-            signup_confirm = st.text_input("Confirm Password", type="password", key="signup_confirm", placeholder="Re-enter your password")
-
-            if st.button("Create Account", type="primary", use_container_width=True, key="btn_signup"):
-                if not signup_name or not signup_email or not signup_password:
-                    st.error("Please fill in all fields.")
-                elif signup_password != signup_confirm:
-                    st.error("Passwords do not match.")
-                elif len(signup_password) < 6:
-                    st.error("Password must be at least 6 characters.")
-                else:
-                    success, message = signup(signup_name, signup_email, signup_password)
-                    if success:
-                        st.success(message + " You can now log in.")
-                    else:
-                        st.error(message)
-
-        st.markdown("""
-        <p style="text-align:center; color:#475569; font-size:11px; margin-top: 32px;">
-            By signing in, you agree to CareerCore's Terms of Service and Privacy Policy.
-        </p>
-        """, unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                height:100vh;background:#0f0f1a;font-family:'Segoe UI',sans-serif;">
+      <div style="font-size:64px;margin-bottom:16px;">🧠</div>
+      <h1 style="color:#e2e8f0;font-size:2.5rem;margin:0;">CareerCore</h1>
+      <p style="color:#94a3b8;margin-top:8px;font-size:1rem;">AI-Powered Career Readiness Platform</p>
+      <a href="http://localhost:{LOGIN_PORT}" target="_self"
+         style="margin-top:40px;padding:16px 48px;background:linear-gradient(135deg,#6c63ff,#818cf8);
+                color:#fff;border-radius:16px;font-size:1.1rem;font-weight:800;
+                text-decoration:none;box-shadow:0 8px 24px rgba(108,99,255,0.4);
+                transition:transform 0.2s;"
+         onmouseover="this.style.transform='scale(1.04)'"
+         onmouseout="this.style.transform='scale(1)'">
+        ✨ &nbsp; Open Login Page
+      </a>
+      <p style="color:#475569;margin-top:16px;font-size:0.8rem;">
+        Opens the anime-themed login with interactive characters
+      </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Show auth page if not logged in
 if not st.session_state.authenticated:
     show_auth_page()
     st.stop()
+
+
+
 
 # ============================================
 # SIDEBAR NAVIGATION (only shown when logged in)

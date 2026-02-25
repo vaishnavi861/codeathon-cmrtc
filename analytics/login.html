@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CareerCore | Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
       --bg: #0f0f1a;
@@ -18,7 +25,7 @@
       --accent4: #43aa8b;
       --text: #e2e8f0;
       --muted: #94a3b8;
-      --border: rgba(108,99,255,0.3);
+      --border: rgba(108, 99, 255, 0.3);
     }
 
     body {
@@ -33,27 +40,55 @@
       cursor: none;
     }
 
-    /* ── Custom cursor ── */
+    /* ── Custom cursor with anime trail ── */
     #cursor {
       position: fixed;
-      width: 14px; height: 14px;
+      width: 14px;
+      height: 14px;
       background: var(--accent);
       border-radius: 50%;
       pointer-events: none;
       z-index: 9999;
-      transform: translate(-50%,-50%);
-      transition: transform 0.1s, width 0.2s, height 0.2s, background 0.2s;
-      box-shadow: 0 0 16px var(--accent), 0 0 40px rgba(108,99,255,0.4);
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, background 0.2s;
+      box-shadow: 0 0 16px var(--accent), 0 0 40px rgba(108, 99, 255, 0.4);
     }
+
     #cursor-ring {
       position: fixed;
-      width: 38px; height: 38px;
-      border: 2px solid rgba(108,99,255,0.5);
+      width: 38px;
+      height: 38px;
+      border: 2px solid rgba(108, 99, 255, 0.5);
       border-radius: 50%;
       pointer-events: none;
       z-index: 9998;
-      transform: translate(-50%,-50%);
+      transform: translate(-50%, -50%);
       transition: all 0.15s ease-out;
+    }
+
+    /* Cursor trail particles */
+    .cursor-trail {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9997;
+      opacity: 0.7;
+      transform: translate(-50%, -50%);
+      animation: trailFade 0.6s ease-out forwards;
+    }
+
+    @keyframes trailFade {
+      0% {
+        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+      }
     }
 
     /* ── Background particles ── */
@@ -68,12 +103,25 @@
       position: relative;
       z-index: 10;
       display: flex;
-      width: 900px;
+      width: 920px;
       max-width: 96vw;
-      min-height: 560px;
+      min-height: 580px;
       border-radius: 28px;
       overflow: hidden;
-      box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px var(--border);
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border);
+      animation: containerIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes containerIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.92) translateY(30px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
     }
 
     /* ── Left Panel — Characters ── */
@@ -94,18 +142,36 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(ellipse 60% 40% at 30% 70%, rgba(108,99,255,0.15) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 50% at 80% 20%, rgba(255,101,132,0.1) 0%, transparent 70%);
+        radial-gradient(ellipse 60% 40% at 30% 70%, rgba(108, 99, 255, 0.15) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 80% 20%, rgba(255, 101, 132, 0.1) 0%, transparent 70%);
       pointer-events: none;
+    }
+
+    /* ── Cursor glow that follows mouse inside left panel ── */
+    .cursor-glow {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(108, 99, 255, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+      transition: opacity 0.3s;
+      opacity: 0;
+    }
+
+    .left-panel:hover .cursor-glow {
+      opacity: 1;
     }
 
     .characters-stage {
       position: relative;
       width: 280px;
       height: 280px;
+      z-index: 2;
     }
 
-    /* ── Character: Big Square (Purple) ── */
+    /* ── Character base ── */
     .char {
       position: absolute;
       display: flex;
@@ -120,6 +186,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: filter 0.3s, box-shadow 0.3s;
+    }
+
+    /* Glow on hover */
+    .char:hover .char-body {
+      filter: brightness(1.2);
     }
 
     /* Eyes */
@@ -131,6 +203,7 @@
       left: 50%;
       transform: translateX(-50%);
     }
+
     .eye {
       width: 14px;
       height: 18px;
@@ -141,22 +214,89 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: height 0.2s, width 0.2s;
     }
+
     .pupil {
       width: 8px;
       height: 10px;
       background: #1a1040;
       border-radius: 50%;
       position: absolute;
-      transition: transform 0.08s ease-out;
+      transition: transform 0.08s ease-out, width 0.2s, height 0.2s;
     }
+
     .eye-shine {
-      width: 3px; height: 3px;
+      width: 3px;
+      height: 3px;
       background: #fff;
       border-radius: 50%;
       position: absolute;
-      top: 3px; right: 3px;
+      top: 3px;
+      right: 3px;
       z-index: 2;
+    }
+
+    /* ── Blush marks ── */
+    .blush {
+      position: absolute;
+      width: 18px;
+      height: 8px;
+      background: rgba(255, 101, 132, 0.4);
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.3s;
+      filter: blur(2px);
+    }
+
+    .blush-left {
+      bottom: 32%;
+      left: 14%;
+    }
+
+    .blush-right {
+      bottom: 32%;
+      right: 14%;
+    }
+
+    .char.blushing .blush {
+      opacity: 1;
+    }
+
+    /* ── Sweat drop ── */
+    .sweat {
+      position: absolute;
+      top: 10%;
+      right: 8%;
+      width: 8px;
+      height: 12px;
+      background: rgba(100, 180, 255, 0.7);
+      border-radius: 0 50% 50% 50%;
+      opacity: 0;
+      transform: rotate(20deg) translateY(-5px);
+      transition: opacity 0.2s;
+    }
+
+    .char.sweating .sweat {
+      opacity: 1;
+      animation: sweatDrop 0.8s ease-in-out infinite;
+    }
+
+    @keyframes sweatDrop {
+      0% {
+        transform: rotate(20deg) translateY(-5px);
+        opacity: 0.7;
+      }
+
+      50% {
+        transform: rotate(20deg) translateY(2px);
+        opacity: 1;
+      }
+
+      100% {
+        transform: rotate(20deg) translateY(-5px);
+        opacity: 0.7;
+      }
     }
 
     /* Mouth */
@@ -170,86 +310,209 @@
       border-radius: 0 0 12px 12px;
       border: 3px solid #fff;
       border-top: none;
-      transition: height 0.2s, width 0.2s;
+      transition: height 0.15s, width 0.15s, border-radius 0.15s;
     }
+
     .mouth.surprised {
       width: 16px;
       height: 16px;
       border-radius: 50%;
       border: 3px solid #fff;
     }
+
     .mouth.smile {
       width: 28px;
       height: 14px;
     }
 
+    .mouth.happy {
+      width: 24px;
+      height: 18px;
+      border-radius: 0 0 50% 50%;
+      border: 3px solid #fff;
+      border-top: none;
+    }
+
+    .mouth.cat {
+      width: 20px;
+      height: 6px;
+      border: none;
+      border-bottom: 3px solid #fff;
+      border-radius: 0;
+      clip-path: polygon(0% 0%, 50% 100%, 100% 0%);
+      background: #fff;
+    }
+
+    /* ── Heart particles from characters ── */
+    .heart-particle {
+      position: absolute;
+      pointer-events: none;
+      font-size: 0.9rem;
+      animation: heartFloat 1.2s ease-out forwards;
+      z-index: 10;
+    }
+
+    @keyframes heartFloat {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotate(0deg);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.3) rotate(20deg);
+      }
+    }
+
     /* ── Character 1: Diamond (main, top-center) ── */
     #char1 {
-      top: 0; left: 50%;
+      top: 0;
+      left: 50%;
       transform: translateX(-50%);
       z-index: 3;
     }
+
     #char1 .char-body {
-      width: 110px; height: 110px;
+      width: 110px;
+      height: 110px;
       background: linear-gradient(135deg, #a78bfa, #6c63ff);
       border-radius: 20px;
       transform: rotate(-10deg);
-      box-shadow: 0 12px 32px rgba(108,99,255,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+      box-shadow: 0 12px 32px rgba(108, 99, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
-    #char1 .eyes { top: 32%; gap: 12px; }
-    #char1 .eye { width: 16px; height: 20px; }
-    #char1 .pupil { width: 9px; height: 11px; }
-    #char1 .mouth { width: 26px; height: 14px; bottom: 24%; }
+
+    #char1 .eyes {
+      top: 32%;
+      gap: 12px;
+    }
+
+    #char1 .eye {
+      width: 16px;
+      height: 20px;
+    }
+
+    #char1 .pupil {
+      width: 9px;
+      height: 11px;
+    }
+
+    #char1 .mouth {
+      width: 26px;
+      height: 14px;
+      bottom: 24%;
+    }
 
     /* ── Character 2: Circle (Orange, bottom left) ── */
     #char2 {
-      bottom: 30px; left: 10px;
+      bottom: 30px;
+      left: 10px;
       z-index: 2;
     }
+
     #char2 .char-body {
-      width: 85px; height: 85px;
+      width: 85px;
+      height: 85px;
       background: linear-gradient(135deg, #fbbf24, #f97316);
       border-radius: 50%;
-      box-shadow: 0 10px 24px rgba(249,115,22,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+      box-shadow: 0 10px 24px rgba(249, 115, 22, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
-    #char2 .eyes { top: 30%; gap: 8px; }
-    #char2 .eye { width: 12px; height: 16px; }
-    #char2 .pupil { width: 7px; height: 9px; }
-    #char2 .mouth { width: 18px; height: 10px; bottom: 22%; }
+
+    #char2 .eyes {
+      top: 30%;
+      gap: 8px;
+    }
+
+    #char2 .eye {
+      width: 12px;
+      height: 16px;
+    }
+
+    #char2 .pupil {
+      width: 7px;
+      height: 9px;
+    }
+
+    #char2 .mouth {
+      width: 18px;
+      height: 10px;
+      bottom: 22%;
+    }
 
     /* ── Character 3: Rectangle (Dark, bottom center) ── */
     #char3 {
-      bottom: 20px; left: 50%;
+      bottom: 20px;
+      left: 50%;
       transform: translateX(-40%);
       z-index: 4;
     }
+
     #char3 .char-body {
-      width: 60px; height: 80px;
+      width: 60px;
+      height: 80px;
       background: linear-gradient(135deg, #374151, #1f2937);
       border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
     }
-    #char3 .eyes { top: 28%; gap: 6px; }
-    #char3 .eye { width: 11px; height: 14px; }
-    #char3 .pupil { width: 6px; height: 8px; }
-    #char3 .mouth { width: 16px; height: 8px; bottom: 24%; }
+
+    #char3 .eyes {
+      top: 28%;
+      gap: 6px;
+    }
+
+    #char3 .eye {
+      width: 11px;
+      height: 14px;
+    }
+
+    #char3 .pupil {
+      width: 6px;
+      height: 8px;
+    }
+
+    #char3 .mouth {
+      width: 16px;
+      height: 8px;
+      bottom: 24%;
+    }
 
     /* ── Character 4: Small star/diamond (yellow, top right) ── */
     #char4 {
-      top: 40px; right: 20px;
+      top: 40px;
+      right: 20px;
       z-index: 2;
     }
+
     #char4 .char-body {
-      width: 70px; height: 70px;
+      width: 70px;
+      height: 70px;
       background: linear-gradient(135deg, #f9c74f, #f3722c);
       border-radius: 14px;
       transform: rotate(25deg);
-      box-shadow: 0 8px 20px rgba(243,114,44,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+      box-shadow: 0 8px 20px rgba(243, 114, 44, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
-    #char4 .eyes { top: 30%; gap: 6px; transform: translateX(-50%) rotate(-25deg); }
-    #char4 .eye { width: 10px; height: 13px; }
-    #char4 .pupil { width: 6px; height: 8px; }
-    #char4 .mouth { bottom: 22%; width: 14px; height: 8px; transform: translateX(-50%) rotate(-25deg); }
+
+    #char4 .eyes {
+      top: 30%;
+      gap: 6px;
+      transform: translateX(-50%) rotate(-25deg);
+    }
+
+    #char4 .eye {
+      width: 10px;
+      height: 13px;
+    }
+
+    #char4 .pupil {
+      width: 6px;
+      height: 8px;
+    }
+
+    #char4 .mouth {
+      bottom: 22%;
+      width: 14px;
+      height: 8px;
+      transform: translateX(-50%) rotate(-25deg);
+    }
 
     /* ── Decorative floating shapes ── */
     .float-shape {
@@ -258,16 +521,26 @@
       opacity: 0.15;
       animation: floatAnim 4s ease-in-out infinite;
     }
+
     @keyframes floatAnim {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-14px) rotate(8deg); }
+
+      0%,
+      100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+
+      50% {
+        transform: translateY(-14px) rotate(8deg);
+      }
     }
 
     /* ── Brand text below characters ── */
     .brand {
       margin-top: 28px;
       text-align: center;
+      z-index: 2;
     }
+
     .brand h1 {
       font-size: 2rem;
       font-weight: 900;
@@ -276,6 +549,7 @@
       -webkit-text-fill-color: transparent;
       letter-spacing: -0.5px;
     }
+
     .brand p {
       font-size: 0.8rem;
       color: var(--muted);
@@ -297,14 +571,17 @@
     .right-panel::before {
       content: '';
       position: absolute;
-      top: 0; left: 0;
-      width: 1px; height: 100%;
-      background: linear-gradient(to bottom, transparent, rgba(108,99,255,0.4), transparent);
+      top: 0;
+      left: 0;
+      width: 1px;
+      height: 100%;
+      background: linear-gradient(to bottom, transparent, rgba(108, 99, 255, 0.4), transparent);
     }
 
     .form-header {
       margin-bottom: 32px;
     }
+
     .form-header .greeting {
       font-size: 0.75rem;
       font-weight: 700;
@@ -313,11 +590,13 @@
       letter-spacing: 2px;
       margin-bottom: 6px;
     }
+
     .form-header h2 {
       font-size: 1.8rem;
       font-weight: 900;
       color: var(--text);
     }
+
     .form-header p {
       font-size: 0.85rem;
       color: var(--muted);
@@ -330,10 +609,11 @@
       display: flex;
       gap: 4px;
       margin-bottom: 28px;
-      background: rgba(255,255,255,0.04);
+      background: rgba(255, 255, 255, 0.04);
       border-radius: 12px;
       padding: 4px;
     }
+
     .tab-btn {
       flex: 1;
       padding: 10px;
@@ -347,16 +627,18 @@
       background: transparent;
       color: var(--muted);
     }
+
     .tab-btn.active {
       background: var(--accent);
       color: #fff;
-      box-shadow: 0 4px 14px rgba(108,99,255,0.4);
+      box-shadow: 0 4px 14px rgba(108, 99, 255, 0.4);
     }
 
     /* Form fields */
     .field {
       margin-bottom: 18px;
     }
+
     .field label {
       display: block;
       font-size: 0.78rem;
@@ -366,11 +648,12 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+
     .field input {
       width: 100%;
       padding: 13px 16px;
-      background: rgba(255,255,255,0.05);
-      border: 1.5px solid rgba(108,99,255,0.2);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(108, 99, 255, 0.2);
       border-radius: 12px;
       color: var(--text);
       font-family: 'Nunito', sans-serif;
@@ -380,13 +663,15 @@
       transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
       cursor: none;
     }
+
     .field input:focus {
       border-color: var(--accent);
-      background: rgba(108,99,255,0.08);
-      box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+      background: rgba(108, 99, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
     }
+
     .field input::placeholder {
-      color: rgba(148,163,184,0.4);
+      color: rgba(148, 163, 184, 0.4);
     }
 
     /* Submit button */
@@ -402,33 +687,43 @@
       font-weight: 900;
       cursor: none;
       transition: all 0.25s;
-      box-shadow: 0 6px 20px rgba(108,99,255,0.4);
+      box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4);
       margin-top: 6px;
       position: relative;
       overflow: hidden;
     }
+
     .submit-btn::after {
       content: '';
       position: absolute;
-      top: -50%; left: -60%;
-      width: 40%; height: 200%;
-      background: rgba(255,255,255,0.15);
+      top: -50%;
+      left: -60%;
+      width: 40%;
+      height: 200%;
+      background: rgba(255, 255, 255, 0.15);
       transform: skewX(-20deg);
       transition: left 0.4s;
     }
-    .submit-btn:hover::after { left: 130%; }
+
+    .submit-btn:hover::after {
+      left: 130%;
+    }
+
     .submit-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 28px rgba(108,99,255,0.5);
+      box-shadow: 0 10px 28px rgba(108, 99, 255, 0.5);
     }
-    .submit-btn:active { transform: translateY(0); }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
 
     /* Google btn */
     .google-btn {
       width: 100%;
       padding: 12px;
-      background: rgba(255,255,255,0.05);
-      border: 1.5px solid rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
       border-radius: 14px;
       color: var(--text);
       font-family: 'Nunito', sans-serif;
@@ -442,12 +737,15 @@
       gap: 10px;
       transition: all 0.25s;
     }
+
     .google-btn:hover {
-      background: rgba(255,255,255,0.09);
-      border-color: rgba(255,255,255,0.2);
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.2);
     }
+
     .google-icon {
-      width: 18px; height: 18px;
+      width: 18px;
+      height: 18px;
       background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/%3E%3Cpath fill='%234285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/%3E%3Cpath fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/%3E%3Cpath fill='%2334A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/%3E%3C/svg%3E") center/contain no-repeat;
     }
 
@@ -460,11 +758,13 @@
       font-size: 0.75rem;
       font-weight: 700;
     }
-    .divider::before, .divider::after {
+
+    .divider::before,
+    .divider::after {
       content: '';
       flex: 1;
       height: 1px;
-      background: rgba(255,255,255,0.08);
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .switch-text {
@@ -474,6 +774,7 @@
       color: var(--muted);
       font-weight: 600;
     }
+
     .switch-text a {
       color: var(--accent);
       text-decoration: none;
@@ -486,7 +787,7 @@
       top: -38px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(255,255,255,0.95);
+      background: rgba(255, 255, 255, 0.95);
       color: #1a1040;
       font-size: 0.7rem;
       font-weight: 800;
@@ -497,43 +798,154 @@
       pointer-events: none;
       transition: opacity 0.2s, top 0.2s;
     }
-    .reaction.show { opacity: 1; top: -44px; }
+
+    .reaction.show {
+      opacity: 1;
+      top: -44px;
+    }
+
     .reaction::after {
       content: '';
       position: absolute;
-      bottom: -5px; left: 50%;
+      bottom: -5px;
+      left: 50%;
       transform: translateX(-50%);
       border: 5px solid transparent;
-      border-top-color: rgba(255,255,255,0.95);
+      border-top-color: rgba(255, 255, 255, 0.95);
       border-bottom: none;
     }
 
     /* ── Wiggle animation ── */
     @keyframes wiggle {
-      0%, 100% { transform: rotate(-10deg); }
-      25% { transform: rotate(-16deg) scale(1.05); }
-      75% { transform: rotate(-4deg) scale(1.05); }
-    }
-    @keyframes wiggle2 {
-      0%, 100% { transform: none; }
-      25% { transform: scale(1.08) translateY(-4px); }
-      75% { transform: scale(0.95); }
-    }
-    @keyframes wiggle3 {
-      0%, 100% { transform: none; }
-      25% { transform: translateX(-4px) rotate(-5deg); }
-      75% { transform: translateX(4px) rotate(5deg); }
-    }
-    @keyframes wiggle4 {
-      0%, 100% { transform: rotate(25deg); }
-      25% { transform: rotate(35deg) scale(1.08); }
-      75% { transform: rotate(18deg) scale(1.05); }
+
+      0%,
+      100% {
+        transform: rotate(-10deg);
+      }
+
+      25% {
+        transform: rotate(-16deg) scale(1.05);
+      }
+
+      75% {
+        transform: rotate(-4deg) scale(1.05);
+      }
     }
 
-    #char1.excited .char-body { animation: wiggle 0.5s ease-in-out; }
-    #char2.excited .char-body { animation: wiggle2 0.5s ease-in-out; }
-    #char3.excited .char-body { animation: wiggle3 0.5s ease-in-out; }
-    #char4.excited .char-body { animation: wiggle4 0.5s ease-in-out; }
+    @keyframes wiggle2 {
+
+      0%,
+      100% {
+        transform: none;
+      }
+
+      25% {
+        transform: scale(1.08) translateY(-4px);
+      }
+
+      75% {
+        transform: scale(0.95);
+      }
+    }
+
+    @keyframes wiggle3 {
+
+      0%,
+      100% {
+        transform: none;
+      }
+
+      25% {
+        transform: translateX(-4px) rotate(-5deg);
+      }
+
+      75% {
+        transform: translateX(4px) rotate(5deg);
+      }
+    }
+
+    @keyframes wiggle4 {
+
+      0%,
+      100% {
+        transform: rotate(25deg);
+      }
+
+      25% {
+        transform: rotate(35deg) scale(1.08);
+      }
+
+      75% {
+        transform: rotate(18deg) scale(1.05);
+      }
+    }
+
+    #char1.excited .char-body {
+      animation: wiggle 0.5s ease-in-out;
+    }
+
+    #char2.excited .char-body {
+      animation: wiggle2 0.5s ease-in-out;
+    }
+
+    #char3.excited .char-body {
+      animation: wiggle3 0.5s ease-in-out;
+    }
+
+    #char4.excited .char-body {
+      animation: wiggle4 0.5s ease-in-out;
+    }
+
+    /* ── Bounce animation for button hover ── */
+    @keyframes charBounce {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      30% {
+        transform: translateY(-12px);
+      }
+
+      60% {
+        transform: translateY(-4px);
+      }
+    }
+
+    .char.bouncing .char-body {
+      animation: charBounce 0.6s ease-in-out;
+    }
+
+    /* ── Eye blink ── */
+    @keyframes blink {
+
+      0%,
+      42%,
+      58%,
+      100% {
+        transform: scaleY(1);
+      }
+
+      50% {
+        transform: scaleY(0.05);
+      }
+    }
+
+    .char.blinking .eye {
+      animation: blink 0.2s ease-in-out;
+    }
+
+    /* ── Spin on submit ── */
+    @keyframes charSpin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
 
     /* stars sparkle */
     .sparkle {
@@ -542,359 +954,632 @@
       font-size: 1rem;
       animation: sparkleUp 0.8s ease forwards;
     }
+
     @keyframes sparkleUp {
-      0% { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-40px) scale(0.5); }
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-40px) scale(0.5);
+      }
+    }
+
+    /* ── Glowing ring effect around characters on proximity ── */
+    .char-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      border: 2px solid transparent;
+      top: 0;
+      left: 0;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      pointer-events: none;
+    }
+
+    .char.near .char-ring {
+      border-color: rgba(108, 99, 255, 0.6);
+      box-shadow: 0 0 20px rgba(108, 99, 255, 0.3);
+    }
+
+    /* ── Speed lines overlay when cursor moves fast ── */
+    #speed-lines {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      background: repeating-linear-gradient(90deg,
+          transparent,
+          transparent 48%,
+          rgba(108, 99, 255, 0.03) 49%,
+          transparent 50%);
+    }
+
+    #speed-lines.active {
+      opacity: 1;
     }
   </style>
 </head>
+
 <body>
 
-<canvas id="bg-canvas"></canvas>
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
+  <canvas id="bg-canvas"></canvas>
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+  <div id="speed-lines"></div>
 
-<div class="container">
+  <div class="container">
 
-  <!-- ── LEFT: Characters ── -->
-  <div class="left-panel" id="left-panel">
-    <div class="characters-stage" id="stage">
+    <!-- ── LEFT: Characters ── -->
+    <div class="left-panel" id="left-panel">
+      <div class="cursor-glow" id="cursor-glow"></div>
+      <div class="characters-stage" id="stage">
 
-      <!-- char1: Big purple diamond -->
-      <div class="char" id="char1" data-float="0.18" data-reactions='["Uwu~","Senpai! 💜","Follow me!","*blushes*"]'>
-        <div class="char-body">
-          <div class="reaction" id="r1"></div>
-          <div class="eyes">
-            <div class="eye"><div class="pupil" id="p1a"></div><div class="eye-shine"></div></div>
-            <div class="eye"><div class="pupil" id="p1b"></div><div class="eye-shine"></div></div>
+        <!-- char1: Big purple diamond -->
+        <div class="char" id="char1" data-float="0.18"
+          data-reactions='["Uwu~","Senpai! 💜","Follow me!","*blushes*","Ganbatte! 💪"]'>
+          <div class="char-body">
+            <div class="char-ring"></div>
+            <div class="reaction" id="r1"></div>
+            <div class="sweat"></div>
+            <div class="blush blush-left"></div>
+            <div class="blush blush-right"></div>
+            <div class="eyes">
+              <div class="eye">
+                <div class="pupil" id="p1a"></div>
+                <div class="eye-shine"></div>
+              </div>
+              <div class="eye">
+                <div class="pupil" id="p1b"></div>
+                <div class="eye-shine"></div>
+              </div>
+            </div>
+            <div class="mouth" id="m1"></div>
           </div>
-          <div class="mouth" id="m1"></div>
+        </div>
+
+        <!-- char2: Orange circle -->
+        <div class="char" id="char2" data-float="0.12"
+          data-reactions='["Kyaa! ✨","Hello!","Let me in!","*rolls*","Sugoi! 🌸"]'>
+          <div class="char-body">
+            <div class="char-ring"></div>
+            <div class="reaction" id="r2"></div>
+            <div class="sweat"></div>
+            <div class="blush blush-left"></div>
+            <div class="blush blush-right"></div>
+            <div class="eyes">
+              <div class="eye">
+                <div class="pupil" id="p2a"></div>
+                <div class="eye-shine"></div>
+              </div>
+              <div class="eye">
+                <div class="pupil" id="p2b"></div>
+                <div class="eye-shine"></div>
+              </div>
+            </div>
+            <div class="mouth" id="m2"></div>
+          </div>
+        </div>
+
+        <!-- char3: Dark rectangle -->
+        <div class="char" id="char3" data-float="0.08" data-reactions='["...","Hmph.","Cool.","Whatever.","Tch. 😤"]'>
+          <div class="char-body">
+            <div class="char-ring"></div>
+            <div class="reaction" id="r3"></div>
+            <div class="sweat"></div>
+            <div class="blush blush-left"></div>
+            <div class="blush blush-right"></div>
+            <div class="eyes">
+              <div class="eye">
+                <div class="pupil" id="p3a"></div>
+                <div class="eye-shine"></div>
+              </div>
+              <div class="eye">
+                <div class="pupil" id="p3b"></div>
+                <div class="eye-shine"></div>
+              </div>
+            </div>
+            <div class="mouth" id="m3"></div>
+          </div>
+        </div>
+
+        <!-- char4: Yellow-orange rotated square -->
+        <div class="char" id="char4" data-float="0.15"
+          data-reactions='["Woah! 🌟","Pick me!","Hype!!","So cool!","Yatta! 🎉"]'>
+          <div class="char-body">
+            <div class="char-ring"></div>
+            <div class="reaction" id="r4"></div>
+            <div class="sweat"></div>
+            <div class="blush blush-left"></div>
+            <div class="blush blush-right"></div>
+            <div class="eyes">
+              <div class="eye">
+                <div class="pupil" id="p4a"></div>
+                <div class="eye-shine"></div>
+              </div>
+              <div class="eye">
+                <div class="pupil" id="p4b"></div>
+                <div class="eye-shine"></div>
+              </div>
+            </div>
+            <div class="mouth" id="m4"></div>
+          </div>
+        </div>
+
+        <!-- Floating decorative shapes -->
+        <div class="float-shape"
+          style="width:30px;height:30px;background:#6c63ff;top:10px;left:20px;animation-delay:0s;"></div>
+        <div class="float-shape"
+          style="width:16px;height:16px;background:#ff6584;bottom:120px;right:10px;border-radius:4px;animation-delay:1.2s;">
+        </div>
+        <div class="float-shape"
+          style="width:20px;height:20px;background:#f9c74f;top:130px;left:50px;border-radius:4px;animation-delay:2.1s;">
         </div>
       </div>
 
-      <!-- char2: Orange circle -->
-      <div class="char" id="char2" data-float="0.12" data-reactions='["Kyaa! ✨","Hello!","Let me in!","*rolls*"]'>
-        <div class="char-body">
-          <div class="reaction" id="r2"></div>
-          <div class="eyes">
-            <div class="eye"><div class="pupil" id="p2a"></div><div class="eye-shine"></div></div>
-            <div class="eye"><div class="pupil" id="p2b"></div><div class="eye-shine"></div></div>
-          </div>
-          <div class="mouth" id="m2"></div>
-        </div>
+      <div class="brand">
+        <h1>🧠 CareerCore</h1>
+        <p>AI-Powered Career Readiness</p>
       </div>
-
-      <!-- char3: Dark rectangle -->
-      <div class="char" id="char3" data-float="0.08" data-reactions='["...","Hmph.","Cool.","Whatever."]'>
-        <div class="char-body">
-          <div class="reaction" id="r3"></div>
-          <div class="eyes">
-            <div class="eye"><div class="pupil" id="p3a"></div><div class="eye-shine"></div></div>
-            <div class="eye"><div class="pupil" id="p3b"></div><div class="eye-shine"></div></div>
-          </div>
-          <div class="mouth" id="m3"></div>
-        </div>
-      </div>
-
-      <!-- char4: Yellow-orange rotated square -->
-      <div class="char" id="char4" data-float="0.15" data-reactions='["Woah! 🌟","Pick me!","Hype!!","So cool!"]'>
-        <div class="char-body">
-          <div class="reaction" id="r4"></div>
-          <div class="eyes">
-            <div class="eye"><div class="pupil" id="p4a"></div><div class="eye-shine"></div></div>
-            <div class="eye"><div class="pupil" id="p4b"></div><div class="eye-shine"></div></div>
-          </div>
-          <div class="mouth" id="m4"></div>
-        </div>
-      </div>
-
-      <!-- Floating decorative shapes -->
-      <div class="float-shape" style="width:30px;height:30px;background:#6c63ff;top:10px;left:20px;animation-delay:0s;"></div>
-      <div class="float-shape" style="width:16px;height:16px;background:#ff6584;bottom:120px;right:10px;border-radius:4px;animation-delay:1.2s;"></div>
-      <div class="float-shape" style="width:20px;height:20px;background:#f9c74f;top:130px;left:50px;border-radius:4px;animation-delay:2.1s;"></div>
     </div>
 
-    <div class="brand">
-      <h1>🧠 CareerCore</h1>
-      <p>AI-Powered Career Readiness</p>
+    <!-- ── RIGHT: Form ── -->
+    <div class="right-panel">
+      <div class="form-header">
+        <div class="greeting">Welcome back!</div>
+        <h2>Sign in to continue</h2>
+        <p>Your career twin awaits you ✨</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Log In</button>
+        <button class="tab-btn" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+      </div>
+
+      <!-- Login form -->
+      <div id="form-login">
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="login-email" placeholder="you@example.com" />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="••••••••" />
+        </div>
+        <button class="submit-btn" onclick="handleLogin()">Log In →</button>
+        <div class="divider">or</div>
+        <button class="google-btn"><span class="google-icon"></span>Continue with Google</button>
+        <p class="switch-text">Don't have an account? <a href="#" onclick="switchTab('signup');return false;">Sign
+            Up</a></p>
+      </div>
+
+      <!-- Signup form -->
+      <div id="form-signup" style="display:none;">
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="signup-name" placeholder="Your full name" />
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="signup-email" placeholder="you@example.com" />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="signup-password" placeholder="Min 6 characters" />
+        </div>
+        <button class="submit-btn" onclick="handleSignup()">Create Account →</button>
+        <p class="switch-text">Already have an account? <a href="#" onclick="switchTab('login');return false;">Log
+            In</a></p>
+      </div>
     </div>
   </div>
 
-  <!-- ── RIGHT: Form ── -->
-  <div class="right-panel">
-    <div class="form-header">
-      <div class="greeting">Welcome back!</div>
-      <h2>Sign in to continue</h2>
-      <p>Your career twin awaits you ✨</p>
-    </div>
+  <script>
+    // ── Tab switching ──
+    function switchTab(tab) {
+      document.getElementById('form-login').style.display = tab === 'login' ? '' : 'none';
+      document.getElementById('form-signup').style.display = tab === 'signup' ? '' : 'none';
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+      exciteAll();
+      emitHearts(chars[0].el);
+    }
 
-    <div class="tabs">
-      <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Log In</button>
-      <button class="tab-btn" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
-    </div>
+    function handleLogin() { exciteAll(); showSparkles(); spinAllCharacters(); }
+    function handleSignup() { exciteAll(); showSparkles(); spinAllCharacters(); }
 
-    <!-- Login form -->
-    <div id="form-login">
-      <div class="field">
-        <label>Email Address</label>
-        <input type="email" id="login-email" placeholder="you@example.com" />
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="login-password" placeholder="••••••••" />
-      </div>
-      <button class="submit-btn" onclick="handleLogin()">Log In →</button>
-      <div class="divider">or</div>
-      <button class="google-btn"><span class="google-icon"></span>Continue with Google</button>
-      <p class="switch-text">Don't have an account? <a href="#" onclick="switchTab('signup');return false;">Sign Up</a></p>
-    </div>
+    // ── Custom cursor ──
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursor-ring');
+    const speedLines = document.getElementById('speed-lines');
+    const cursorGlow = document.getElementById('cursor-glow');
+    let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    let rx = mx, ry = my;
+    let prevMx = mx, prevMy = my;
+    let cursorSpeed = 0;
+    let trailCounter = 0;
 
-    <!-- Signup form -->
-    <div id="form-signup" style="display:none;">
-      <div class="field">
-        <label>Full Name</label>
-        <input type="text" id="signup-name" placeholder="Your full name" />
-      </div>
-      <div class="field">
-        <label>Email Address</label>
-        <input type="email" id="signup-email" placeholder="you@example.com" />
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="signup-password" placeholder="Min 6 characters" />
-      </div>
-      <button class="submit-btn" onclick="handleSignup()">Create Account →</button>
-      <p class="switch-text">Already have an account? <a href="#" onclick="switchTab('login');return false;">Log In</a></p>
-    </div>
-  </div>
-</div>
-
-<script>
-  // ── Tab switching ──
-  function switchTab(tab) {
-    document.getElementById('form-login').style.display = tab === 'login' ? '' : 'none';
-    document.getElementById('form-signup').style.display = tab === 'signup' ? '' : 'none';
-    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
-    exciteAll();
-  }
-
-  function handleLogin() { exciteAll(); showSparkles(); }
-  function handleSignup() { exciteAll(); showSparkles(); }
-
-  // ── Custom cursor ──
-  const cursor = document.getElementById('cursor');
-  const ring = document.getElementById('cursor-ring');
-  let mx = window.innerWidth/2, my = window.innerHeight/2;
-  let rx = mx, ry = my;
-
-  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
-
-  (function animateCursor() {
-    // Smooth ring following
-    rx += (mx - rx) * 0.12;
-    ry += (my - ry) * 0.12;
-    cursor.style.left = mx + 'px';
-    cursor.style.top = my + 'px';
-    ring.style.left = rx + 'px';
-    ring.style.top = ry + 'px';
-    requestAnimationFrame(animateCursor);
-  })();
-
-  // ── Background canvas particles ──
-  const canvas = document.getElementById('bg-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, particles = [];
-
-  function resizeCanvas() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-
-  const COLORS = ['rgba(108,99,255,', 'rgba(255,101,132,', 'rgba(249,199,79,', 'rgba(67,170,139,'];
-  for (let i = 0; i < 60; i++) {
-    particles.push({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      r: Math.random() * 3 + 0.5,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      c: COLORS[Math.floor(Math.random() * COLORS.length)],
-      a: Math.random() * 0.5 + 0.1
-    });
-  }
-
-  function drawParticles() {
-    ctx.clearRect(0, 0, W, H);
-    particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
-      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = p.c + p.a + ')';
-      ctx.fill();
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX;
+      my = e.clientY;
     });
 
-    // Draw connections near cursor
-    particles.forEach(p => {
-      const dx = p.x - mx, dy = p.y - my;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < 100) {
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(mx, my);
-        ctx.strokeStyle = p.c + (0.15 * (1 - dist/100)) + ')';
-        ctx.lineWidth = 0.8;
-        ctx.stroke();
-        // attract particles to cursor gently
-        p.vx += -dx * 0.0003;
-        p.vy += -dy * 0.0003;
+    // ── Cursor trail particles ──
+    function spawnTrail(x, y) {
+      const trail = document.createElement('div');
+      trail.className = 'cursor-trail';
+      const colors = ['#6c63ff', '#ff6584', '#f9c74f', '#43aa8b', '#818cf8'];
+      trail.style.background = colors[Math.floor(Math.random() * colors.length)];
+      trail.style.left = x + 'px';
+      trail.style.top = y + 'px';
+      trail.style.width = (3 + Math.random() * 5) + 'px';
+      trail.style.height = trail.style.width;
+      document.body.appendChild(trail);
+      setTimeout(() => trail.remove(), 600);
+    }
+
+    (function animateCursor() {
+      // Smooth ring following
+      rx += (mx - rx) * 0.12;
+      ry += (my - ry) * 0.12;
+      cursor.style.left = mx + 'px';
+      cursor.style.top = my + 'px';
+      ring.style.left = rx + 'px';
+      ring.style.top = ry + 'px';
+
+      // Calculate cursor speed
+      const sdx = mx - prevMx;
+      const sdy = my - prevMy;
+      cursorSpeed = Math.sqrt(sdx * sdx + sdy * sdy);
+      prevMx = mx;
+      prevMy = my;
+
+      // Speed lines effect when cursor moves fast
+      if (cursorSpeed > 25) {
+        speedLines.classList.add('active');
+      } else {
+        speedLines.classList.remove('active');
       }
-      // dampen velocity
-      p.vx *= 0.99;
-      p.vy *= 0.99;
-    });
-    requestAnimationFrame(drawParticles);
-  }
-  drawParticles();
 
-  // ── Character cursor tracking ──
-  const chars = [
-    { el: document.getElementById('char1'), pupils: ['p1a','p1b'], mouth: 'm1', reaction: 'r1', float: 0.18 },
-    { el: document.getElementById('char2'), pupils: ['p2a','p2b'], mouth: 'm2', reaction: 'r2', float: 0.12 },
-    { el: document.getElementById('char3'), pupils: ['p3a','p3b'], mouth: 'm3', reaction: 'r3', float: 0.08 },
-    { el: document.getElementById('char4'), pupils: ['p4a','p4b'], mouth: 'm4', reaction: 'r4', float: 0.15 },
-  ];
+      // Spawn trail particles when moving
+      trailCounter++;
+      if (cursorSpeed > 3 && trailCounter % 3 === 0) {
+        spawnTrail(mx, my);
+      }
 
-  const stage = document.getElementById('stage');
-  let proximity = [0,0,0,0];
-  let floatOffsets = chars.map(() => ({ x: 0, y: 0, tx: 0, ty: 0 }));
-  let time = 0;
+      // Move cursor glow in left panel
+      const lp = document.getElementById('left-panel');
+      const lpRect = lp.getBoundingClientRect();
+      cursorGlow.style.left = (mx - lpRect.left - 100) + 'px';
+      cursorGlow.style.top = (my - lpRect.top - 100) + 'px';
 
-  function trackCharacters() {
-    time += 0.02;
-    const stageRect = stage.getBoundingClientRect();
+      requestAnimationFrame(animateCursor);
+    })();
 
-    chars.forEach((ch, i) => {
-      const rect = ch.el.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
+    // ── Background canvas particles ──
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [];
 
-      // Distance from cursor to character center
-      const dx = mx - cx;
-      const dy = my - cy;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      const maxDist = 300;
-      const prox = Math.max(0, 1 - dist/maxDist);
-      proximity[i] = prox;
+    function resizeCanvas() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
-      // ── Pupil tracking ──
-      const angle = Math.atan2(dy, dx);
-      const maxPupil = 4;
-      const pupilX = Math.cos(angle) * Math.min(dist, maxDist) / maxDist * maxPupil;
-      const pupilY = Math.sin(angle) * Math.min(dist, maxDist) / maxDist * maxPupil;
+    const COLORS = ['rgba(108,99,255,', 'rgba(255,101,132,', 'rgba(249,199,79,', 'rgba(67,170,139,'];
+    for (let i = 0; i < 60; i++) {
+      particles.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: Math.random() * 3 + 0.5,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        c: COLORS[Math.floor(Math.random() * COLORS.length)],
+        a: Math.random() * 0.5 + 0.1
+      });
+    }
 
-      ch.pupils.forEach(pid => {
-        const p = document.getElementById(pid);
-        if (p) p.style.transform = `translate(${pupilX}px, ${pupilY}px)`;
+    function drawParticles() {
+      ctx.clearRect(0, 0, W, H);
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.c + p.a + ')';
+        ctx.fill();
       });
 
-      // ── Mouth expression based on proximity ──
-      const mouth = document.getElementById(ch.mouth);
-      if (mouth) {
-        if (prox > 0.8) {
-          mouth.className = 'mouth surprised';
-        } else if (prox > 0.4) {
-          mouth.className = 'mouth smile';
-        } else {
-          mouth.className = 'mouth';
+      // Draw connections near cursor
+      particles.forEach(p => {
+        const dx = p.x - mx, dy = p.y - my;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(mx, my);
+          ctx.strokeStyle = p.c + (0.15 * (1 - dist / 120)) + ')';
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+          // attract particles to cursor gently
+          p.vx += -dx * 0.0004;
+          p.vy += -dy * 0.0004;
         }
-      }
-
-      // ── Floating body movement toward cursor ──
-      const fo = floatOffsets[i];
-      const floatStrength = ch.float;
-      // Idle float + cursor attraction
-      const idleX = Math.sin(time * 0.8 + i * 1.5) * 6;
-      const idleY = Math.cos(time * 0.6 + i * 1.2) * 8;
-      const attractX = (mx - stageRect.left - stageRect.width/2) * floatStrength * prox * 0.3;
-      const attractY = (my - stageRect.top - stageRect.height/2) * floatStrength * prox * 0.3;
-      fo.tx = idleX + attractX;
-      fo.ty = idleY + attractY;
-      fo.x += (fo.tx - fo.x) * 0.07;
-      fo.y += (fo.ty - fo.y) * 0.07;
-
-      ch.el.style.transform = ch.el.id === 'char1'
-        ? `translateX(-50%) translate(${fo.x}px, ${fo.y}px)`
-        : ch.el.id === 'char3'
-        ? `translateX(-40%) translate(${fo.x}px, ${fo.y}px)`
-        : `translate(${fo.x}px, ${fo.y}px)`;
-    });
-
-    requestAnimationFrame(trackCharacters);
-  }
-  trackCharacters();
-
-  // ── Mouse enter/leave on characters → reactions ──
-  chars.forEach((ch, i) => {
-    const reactions = JSON.parse(ch.el.dataset.reactions);
-    const rbubble = document.getElementById(ch.reaction);
-    let reactionTimer;
-
-    ch.el.addEventListener('mouseenter', () => {
-      rbubble.textContent = reactions[Math.floor(Math.random() * reactions.length)];
-      rbubble.classList.add('show');
-      ch.el.classList.add('excited');
-      clearTimeout(reactionTimer);
-      reactionTimer = setTimeout(() => {
-        rbubble.classList.remove('show');
-        ch.el.classList.remove('excited');
-      }, 1400);
-    });
-  });
-
-  // ── Excite all characters ──
-  function exciteAll() {
-    chars.forEach(ch => {
-      ch.el.classList.remove('excited');
-      void ch.el.offsetWidth;
-      ch.el.classList.add('excited');
-      setTimeout(() => ch.el.classList.remove('excited'), 600);
-    });
-  }
-
-  // ── Sparkles on submit ──
-  function showSparkles() {
-    const emojis = ['⭐','✨','💜','🌟','💫'];
-    for (let i = 0; i < 8; i++) {
-      setTimeout(() => {
-        const spark = document.createElement('div');
-        spark.className = 'sparkle';
-        spark.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        spark.style.left = (Math.random() * window.innerWidth) + 'px';
-        spark.style.top = (Math.random() * window.innerHeight) + 'px';
-        document.body.appendChild(spark);
-        setTimeout(() => spark.remove(), 900);
-      }, i * 80);
+        // dampen velocity
+        p.vx *= 0.99;
+        p.vy *= 0.99;
+      });
+      requestAnimationFrame(drawParticles);
     }
-  }
+    drawParticles();
 
-  // ── cursor scale on hover interactive ──
-  document.querySelectorAll('button, input, a').forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      cursor.style.transform = 'translate(-50%,-50%) scale(1.8)';
-      cursor.style.background = '#ff6584';
-      ring.style.transform = 'translate(-50%,-50%) scale(1.4)';
+    // ── Character cursor tracking ──
+    const chars = [
+      { el: document.getElementById('char1'), pupils: ['p1a', 'p1b'], mouth: 'm1', reaction: 'r1', float: 0.18 },
+      { el: document.getElementById('char2'), pupils: ['p2a', 'p2b'], mouth: 'm2', reaction: 'r2', float: 0.12 },
+      { el: document.getElementById('char3'), pupils: ['p3a', 'p3b'], mouth: 'm3', reaction: 'r3', float: 0.08 },
+      { el: document.getElementById('char4'), pupils: ['p4a', 'p4b'], mouth: 'm4', reaction: 'r4', float: 0.15 },
+    ];
+
+    const stage = document.getElementById('stage');
+    let proximity = [0, 0, 0, 0];
+    let floatOffsets = chars.map(() => ({ x: 0, y: 0, tx: 0, ty: 0 }));
+    let time = 0;
+    let blinkTimers = chars.map(() => Math.random() * 200 + 100);
+
+    function trackCharacters() {
+      time += 0.02;
+      const stageRect = stage.getBoundingClientRect();
+
+      chars.forEach((ch, i) => {
+        const rect = ch.el.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+
+        // Distance from cursor to character center
+        const dx = mx - cx;
+        const dy = my - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const maxDist = 300;
+        const prox = Math.max(0, 1 - dist / maxDist);
+        proximity[i] = prox;
+
+        // ── Pupil tracking (enhanced with size change on proximity) ──
+        const angle = Math.atan2(dy, dx);
+        const maxPupil = 5;
+        const pupilX = Math.cos(angle) * Math.min(dist, maxDist) / maxDist * maxPupil;
+        const pupilY = Math.sin(angle) * Math.min(dist, maxDist) / maxDist * maxPupil;
+
+        ch.pupils.forEach(pid => {
+          const p = document.getElementById(pid);
+          if (p) {
+            p.style.transform = `translate(${pupilX}px, ${pupilY}px)`;
+            // Pupils get bigger when cursor is close (anime surprise effect)
+            const scale = 1 + prox * 0.3;
+            p.style.width = (parseInt(getComputedStyle(p).width) ? '' : '') + '';
+            p.style.transform = `translate(${pupilX}px, ${pupilY}px) scale(${scale})`;
+          }
+        });
+
+        // ── Mouth expression based on proximity + cursor speed ──
+        const mouth = document.getElementById(ch.mouth);
+        if (mouth) {
+          if (cursorSpeed > 20 && prox > 0.3) {
+            mouth.className = 'mouth surprised';
+            ch.el.classList.add('sweating');
+          } else if (prox > 0.8) {
+            mouth.className = 'mouth happy';
+            ch.el.classList.add('blushing');
+            ch.el.classList.remove('sweating');
+          } else if (prox > 0.5) {
+            mouth.className = 'mouth smile';
+            ch.el.classList.add('blushing');
+            ch.el.classList.remove('sweating');
+          } else if (prox > 0.3) {
+            mouth.className = 'mouth smile';
+            ch.el.classList.remove('blushing');
+            ch.el.classList.remove('sweating');
+          } else {
+            mouth.className = 'mouth';
+            ch.el.classList.remove('blushing');
+            ch.el.classList.remove('sweating');
+          }
+        }
+
+        // ── Glowing ring on proximity ──
+        if (prox > 0.5) {
+          ch.el.classList.add('near');
+        } else {
+          ch.el.classList.remove('near');
+        }
+
+        // ── Random blinking ──
+        blinkTimers[i]--;
+        if (blinkTimers[i] <= 0) {
+          ch.el.classList.add('blinking');
+          setTimeout(() => ch.el.classList.remove('blinking'), 200);
+          blinkTimers[i] = Math.random() * 250 + 80;
+        }
+
+        // ── Floating body movement toward cursor (enhanced) ──
+        const fo = floatOffsets[i];
+        const floatStrength = ch.float;
+        // Idle float + cursor attraction
+        const idleX = Math.sin(time * 0.8 + i * 1.5) * 6;
+        const idleY = Math.cos(time * 0.6 + i * 1.2) * 8;
+        const attractX = (mx - stageRect.left - stageRect.width / 2) * floatStrength * prox * 0.4;
+        const attractY = (my - stageRect.top - stageRect.height / 2) * floatStrength * prox * 0.4;
+
+        // Characters lean away when cursor moves very fast near them
+        let dodgeX = 0, dodgeY = 0;
+        if (cursorSpeed > 30 && prox > 0.5) {
+          dodgeX = -Math.cos(angle) * 8;
+          dodgeY = -Math.sin(angle) * 8;
+        }
+
+        fo.tx = idleX + attractX + dodgeX;
+        fo.ty = idleY + attractY + dodgeY;
+        fo.x += (fo.tx - fo.x) * 0.07;
+        fo.y += (fo.ty - fo.y) * 0.07;
+
+        ch.el.style.transform = ch.el.id === 'char1'
+          ? `translateX(-50%) translate(${fo.x}px, ${fo.y}px)`
+          : ch.el.id === 'char3'
+            ? `translateX(-40%) translate(${fo.x}px, ${fo.y}px)`
+            : `translate(${fo.x}px, ${fo.y}px)`;
+      });
+
+      requestAnimationFrame(trackCharacters);
+    }
+    trackCharacters();
+
+    // ── Mouse enter/leave on characters → reactions + hearts ──
+    chars.forEach((ch, i) => {
+      const reactions = JSON.parse(ch.el.dataset.reactions);
+      const rbubble = document.getElementById(ch.reaction);
+      let reactionTimer;
+
+      ch.el.addEventListener('mouseenter', () => {
+        rbubble.textContent = reactions[Math.floor(Math.random() * reactions.length)];
+        rbubble.classList.add('show');
+        ch.el.classList.add('excited');
+        emitHearts(ch.el);
+        clearTimeout(reactionTimer);
+        reactionTimer = setTimeout(() => {
+          rbubble.classList.remove('show');
+          ch.el.classList.remove('excited');
+        }, 1400);
+      });
+
+      // Click on character → special spin + hearts burst
+      ch.el.addEventListener('click', () => {
+        ch.el.classList.add('excited');
+        for (let j = 0; j < 5; j++) {
+          setTimeout(() => emitHearts(ch.el), j * 100);
+        }
+        setTimeout(() => ch.el.classList.remove('excited'), 800);
+      });
     });
-    el.addEventListener('mouseleave', () => {
-      cursor.style.transform = 'translate(-50%,-50%) scale(1)';
-      cursor.style.background = '#6c63ff';
-      ring.style.transform = 'translate(-50%,-50%) scale(1)';
+
+    // ── Emit hearts from a character ──
+    function emitHearts(charEl) {
+      const symbols = ['💜', '💖', '✨', '🌟', '💫', '⭐', '🌸', '💗'];
+      for (let i = 0; i < 3; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'heart-particle';
+        heart.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        heart.style.left = (Math.random() * 60 + 20) + '%';
+        heart.style.top = (Math.random() * 40 + 10) + '%';
+        charEl.querySelector('.char-body').appendChild(heart);
+        setTimeout(() => heart.remove(), 1200);
+      }
+    }
+
+    // ── Excite all characters ──
+    function exciteAll() {
+      chars.forEach(ch => {
+        ch.el.classList.remove('excited');
+        void ch.el.offsetWidth;
+        ch.el.classList.add('excited');
+        setTimeout(() => ch.el.classList.remove('excited'), 600);
+      });
+    }
+
+    // ── Spin all characters on form submit ──
+    function spinAllCharacters() {
+      chars.forEach(ch => {
+        const body = ch.el.querySelector('.char-body');
+        body.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        body.style.transform = body.style.transform + ' rotate(360deg)';
+        emitHearts(ch.el);
+        setTimeout(() => {
+          body.style.transition = '';
+          body.style.transform = '';
+        }, 700);
+      });
+    }
+
+    // ── Sparkles on submit ──
+    function showSparkles() {
+      const emojis = ['⭐', '✨', '💜', '🌟', '💫', '🎊', '🎉', '💖'];
+      for (let i = 0; i < 12; i++) {
+        setTimeout(() => {
+          const spark = document.createElement('div');
+          spark.className = 'sparkle';
+          spark.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+          spark.style.left = (Math.random() * window.innerWidth) + 'px';
+          spark.style.top = (Math.random() * window.innerHeight) + 'px';
+          spark.style.fontSize = (0.8 + Math.random() * 1.2) + 'rem';
+          document.body.appendChild(spark);
+          setTimeout(() => spark.remove(), 900);
+        }, i * 60);
+      }
+    }
+
+    // ── Form field interactions: characters react to typing ──
+    document.querySelectorAll('.field input').forEach(input => {
+      input.addEventListener('focus', () => {
+        // Characters get curious when user focuses on input
+        chars.forEach(ch => {
+          ch.el.classList.add('bouncing');
+          setTimeout(() => ch.el.classList.remove('bouncing'), 600);
+        });
+      });
+
+      input.addEventListener('input', () => {
+        // Characters wiggle a little with each keystroke
+        const randomChar = chars[Math.floor(Math.random() * chars.length)];
+        randomChar.el.classList.remove('excited');
+        void randomChar.el.offsetWidth;
+        randomChar.el.classList.add('excited');
+        setTimeout(() => randomChar.el.classList.remove('excited'), 400);
+      });
     });
-  });
-</script>
+
+    // ── cursor scale on hover interactive ──
+    document.querySelectorAll('button, input, a').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursor.style.transform = 'translate(-50%,-50%) scale(1.8)';
+        cursor.style.background = '#ff6584';
+        ring.style.transform = 'translate(-50%,-50%) scale(1.4)';
+        // Characters notice button hover
+        chars.forEach(ch => {
+          ch.el.classList.add('bouncing');
+          setTimeout(() => ch.el.classList.remove('bouncing'), 500);
+        });
+      });
+      el.addEventListener('mouseleave', () => {
+        cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+        cursor.style.background = '#6c63ff';
+        ring.style.transform = 'translate(-50%,-50%) scale(1)';
+      });
+    });
+
+    // ── Submit button special hover: characters get extra hyped ──
+    document.querySelectorAll('.submit-btn').forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        chars.forEach((ch, i) => {
+          setTimeout(() => {
+            emitHearts(ch.el);
+            const mouth = document.getElementById(ch.mouth);
+            if (mouth) mouth.className = 'mouth happy';
+            ch.el.classList.add('blushing');
+          }, i * 100);
+        });
+      });
+      btn.addEventListener('mouseleave', () => {
+        chars.forEach(ch => ch.el.classList.remove('blushing'));
+      });
+    });
+  </script>
 </body>
+
 </html>
